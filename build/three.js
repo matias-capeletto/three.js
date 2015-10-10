@@ -19138,21 +19138,21 @@ THREE.Mesh.prototype.raycast = ( function () {
 
 					if ( distance < raycaster.near || distance > raycaster.far ) continue;
 
+					a = i / 3;
+					b = a + 1;
+					c = a + 2;
+
 					var uv;
 
 					if ( attributes.uv !== undefined ) {
 
 						var uvs = attributes.uv.array;
-						uvA.fromArray( uvs, i );
-						uvB.fromArray( uvs, i + 2 );
-						uvC.fromArray( uvs, i + 4 );
+						uvA.fromArray( uvs, a * 2 );
+						uvB.fromArray( uvs, b * 2 );
+						uvC.fromArray( uvs, c * 2 );
 						uv = uvIntersection( intersectionPoint, vA, vB, vC, uvA, uvB, uvC );
 
 					}
-
-					a = i / 3;
-					b = a + 1;
-					c = a + 2;
 
 					intersects.push( {
 
@@ -22005,7 +22005,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 		}
 
 		// remove all webgl properties
-		properties.delete( texture );
+		properties.remove( texture );
 
 	}
 
@@ -22034,8 +22034,8 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		}
 
-		properties.delete( renderTarget.texture );
-		properties.delete( renderTarget );
+		properties.remove( renderTarget.texture );
+		properties.remove( renderTarget );
 
 	}
 
@@ -22043,7 +22043,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		releaseMaterialProgramReference( material );
 
-		properties.delete( material );
+		properties.remove( material );
 
 	}
 
@@ -22265,26 +22265,19 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		}
 
-		if ( group === null ) {
+		var drawStart = geometry.drawRange.start;
+		var drawCount = geometry.drawRange.count;
 
-			var count;
+		if ( drawCount === Infinity ) {
 
-			if ( index !== null ) {
+			drawCount = index !== null ? index.count : position.count;
 
-				count = index.array.length;
+		}
 
-			} else {
+		if ( group !== null ) {
 
-				count = position.count;
-
-			}
-
-			var drawRange = geometry.drawRange;
-
-			group = {
-				start: drawRange.start,
-				count: Math.min( drawRange.count, count )
-			};
+			drawStart = Math.max( drawStart, group.start );
+			drawCount = Math.min( drawCount, group.count );
 
 		}
 
@@ -22307,7 +22300,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			} else {
 
-				renderer.render( group.start, group.count );
+				renderer.render( drawStart, drawCount );
 
 			}
 
@@ -22329,12 +22322,12 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			}
 
-			renderer.render( group.start, group.count );
+			renderer.render( drawStart, drawCount );
 
 		} else if ( object instanceof THREE.Points ) {
 
 			renderer.setMode( _gl.POINTS );
-			renderer.render( group.start, group.count );
+			renderer.render( drawStart, drawCount );
 
 		}
 
@@ -25584,11 +25577,11 @@ THREE.WebGLGeometries = function ( gl, properties, info ) {
 
 		if ( attribute instanceof THREE.InterleavedBufferAttribute ) {
 
-			properties.delete( attribute.data );
+			properties.remove( attribute.data );
 
 		} else {
 
-			properties.delete( attribute );
+			properties.remove( attribute );
 
 		}
 
@@ -26654,7 +26647,7 @@ THREE.WebGLProperties = function () {
 
 	};
 
-	this.delete = function ( object ) {
+	this.remove = function ( object ) {
 
 		delete properties[ object.uuid ];
 
